@@ -45,35 +45,35 @@ TakenPCA = pd.DataFrame(principleComponents[:,:1210])
 #TakenPCA["target"] = train["target"]
 
 #%%
-train_x = TakenPCA[:4000]
-train_y = train["target"][:4000]
-
-test_x = TakenPCA[4000:]
-test_y = np.asarray(train["target"][4000:])
-
+train_x = TakenPCA
+train_y = train["target"]
 #%%
 LR = LinearRegression()
 LR.fit(train_x, train_y)
 
-prediction = LR.predict(test_x)
+#%%
+submission = pd.read_csv("D:\\Kaggle\\Santander\\Data\\test.csv")
+submission = submission.fillna("0")
+columns = submission.columns.tolist()
+columns.remove("ID")
 
-LR_RMSE = np.sqrt(mean_squared_error(test_y, prediction))
-LR_RMSE
+columns = np.asarray(columns)
+
+x = submission.loc[:, columns].values
 
 #%%
-Ridge = Ridge()
-Ridge.fit(train_x, train_y)
+std_values = StandardScaler().fit_transform(x)
+pca = PCA(n_components=1210)
 
-prediction = LR.predict(test_x)
-
-Ridge_RMSE = np.sqrt(mean_squared_error(test_y, prediction))
-Ridge_RMSE
+principleComponents = pca.fit_transform(std_values)
 
 #%%
-las = Lasso(alpha = 0.2)
-las.fit(train_x, train_y)
+TakenPCA = pd.DataFrame(principleComponents[:,:1210])
 
-prediction = LR.predict(test_x)
+prediction = LR.predict(TakenPCA)
+submission_file = pd.DataFrame(np.abs(prediction), columns = ["Target"])
+submission_file["ID"] = submission["ID"]
 
-las_RMSE = np.sqrt(mean_squared_error(test_y, prediction))
-las_RMSE
+submission_file = submission_file[["ID", "Target"]]
+
+submission_file.to_csv("D:\\Kaggle\\Santander\\Data\\submission.csv", index=False)
